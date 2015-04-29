@@ -35,7 +35,7 @@ class MantisBrain:
                         self.state = 'idle'
 
                     else:
-                        self.body.follow(self.target)
+                        self.body.go_to(self.target)
                     self.body.set_alarm(1)
 
             elif message is 'collide' and details['what'] is 'Slug':
@@ -79,6 +79,10 @@ class SlugBrain:
             elif details is 'i':
                 self.set_state('idle')
 
+            elif details is 'x':
+                self.set_state('bloodlust')
+                print 'FOR GLORY!'
+
             else:
                 self.set_state('moving')
                 self.body.go_to(details)
@@ -98,7 +102,7 @@ class SlugBrain:
                     pass
 
             if self.target:
-                self.body.follow(self.target)
+                self.body.go_to(self.target)
 
             elif self.no_target:
                 self.state_finished()
@@ -120,7 +124,7 @@ class SlugBrain:
                 self.reset_timer()
 
                 if self.target:
-                    self.body.follow(self.target)
+                    self.body.go_to(self.target)
 
                 elif self.no_target:
                     self.state_finished()
@@ -132,7 +136,7 @@ class SlugBrain:
                 self.reset_timer()
 
             if self.target:
-                self.body.follow(self.target)
+                self.body.go_to(self.target)
 
             elif self.has_resource:
                 self.state_finished()
@@ -183,10 +187,9 @@ class SlugBrain:
 
         if self.state is 'bloodlust':
             self.target = self.body.find_nearest('Slug')
-            self.reset_timer()
 
             if self.target:
-                self.body.follow(self.target)
+                self.body.go_to(self.target)
 
             elif self.no_target:
                 self.state_finished()
