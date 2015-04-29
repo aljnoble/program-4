@@ -42,7 +42,7 @@ class MantisBrain:
                 slug = details['who']
                 slug.amount -= self.damage  # take a tiny little bite
                 self.radius += 0.1
-                self.damage += 0.01
+                self.damage += 0.001
 
 
 class SlugBrain:
@@ -83,40 +83,37 @@ class SlugBrain:
                 self.set_state('moving')
                 self.body.go_to(details)
 
-        if self.state is 'attack' and message is 'timer':
-            try:
-                self.target = self.body.find_nearest('Mantis')
-                self.reset_timer()
+        if self.state is 'attack':
+            if message is 'timer':
+                try:
+                    self.target = self.body.find_nearest('Mantis')
+                    self.reset_timer()
 
-                if self.target:
-                    self.body.follow(self.target)
+                except ZeroDivisionError:
+                    self.state = 'bloodlust'
+                    pass
 
-                elif self.no_target:
-                    self.state_finished()
+                except ValueError:
+                    self.state = 'bloodlust'
+                    pass
 
-            except ZeroDivisionError:
-                self.state = 'bloodlust'
-                pass
+            if self.target:
+                self.body.follow(self.target)
 
-            except ValueError:
-                self.state = 'bloodlust'
-                pass
+            elif self.no_target:
+                self.state_finished()
 
         if self.state is 'build':
 
             if message is 'collide' and details['what'] is 'Nest':
                 nest = details['who']
 
-                if self.has_resource:
+                if nest.amount < 1:
+                    nest.amount += 0.01
+                    self.has_resource = False
 
-                    if nest.amount < 1:
-                        nest.amount += 0.01
-
-                    else:
-                        self.set_state('idle')
-
-                elif not self.has_resource:
-                    self.set_state('harvest')
+                else:
+                    self.set_state('idle')
 
             if message is 'timer':
                 self.target = self.body.find_nearest('Nest')
@@ -128,9 +125,11 @@ class SlugBrain:
                 elif self.no_target:
                     self.state_finished()
 
-        if self.state is 'harvest' and message is 'timer':
-            self.target = self.body.find_nearest('Resource')
-            self.reset_timer()
+        if self.state is 'harvest':
+
+            if message is 'timer':
+                self.target = self.body.find_nearest('Resource')
+                self.reset_timer()
 
             if self.target:
                 self.body.follow(self.target)
@@ -143,15 +142,13 @@ class SlugBrain:
 
             if message is 'collide':
 
-                if details['what'] is 'Nest':
-
-                    if self.has_resource:
-                        self.has_resource = False
-
-                elif details['what'] is 'Resource':
+                if details['what'] is 'Resource':
                     resource = details['who']
 
-                    if not self.has_resource:
+                    if self.has_resource is True:
+                        self.set_state('build')
+
+                    if self.has_resource is False:
                         self.has_resource = True
                         resource.amount -= 0.25
 
@@ -220,9 +217,9 @@ class SlugBrain:
 
 
 world_specification = {
-    'worldgen_seed': 13,
+    'worldgen_seed': 4,
     'nests': 2,
-    'obstacles': 25,
+    'obstacles': 20,
     'resources': 5,
     'slugs': 5,
     'mantises': 5,
